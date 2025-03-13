@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %} Cервис укорачивания ссылок {% endblock %} 
+{% block content %}
+<main>
+  <section class="container my-5 px-4">
+    <h1 class="text-center"><span style="color:red">Ya</span>Cut</h1>
+    <p class="text-center my-4">
+      Создайте короткую ссылку автоматически или предложите свой вариант
+    </p>
+      <div class="row justify-content-center"> <!-- Добавлено для центрирования -->
+        <div class="col-sm-6">
+          <form method="POST">
+            {{ form.csrf_token }}
+            {{ form.original_link(class="form-control form-control-lg py-2 mb-3", placeholder="Длинная ссылка") }}
+              {% if form.original_link.errors %}
+              <p class="text-danger">
+                <span style="color:red">
+                  {% for error in form.original_link.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </span>
+              </p>
+              {% endif %}
+            
+            {{ form.custom_id(class="form-control form-control-lg py-2 mb-3", placeholder="Ваш вариант короткой ссылки")}}
+              {% if form.custom_id.errors %}
+              <p class="text-danger">
+                <span style="color:red">
+                  {% for error in form.custom_id.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </span>
+              </p>
+              {% endif %}
+
+            {{ form.submit(class="btn btn-primary", value="Создать") }}
+          </form>
+
+          <p class="py-3 mb-3">
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                {% for message in messages %}
+                  {{ message }}
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+          </p>
+
+          {% if created_link %}
+            <p class="text-success">Ваша новая ссылка готова: <a href="{{ created_link }}">{{ created_link }}</a></p>
+          {% endif %}
+        </div>
+      </div>
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}404. Если тут что-то было, теперь этого тут нет.{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center">404. Страница не найдена</h1>
+    <p class="text-center">Извините, но запрашиваемая страница не найдена.</p>
+    <p class="text-center">
+      <a href="{{ url_for('index_view') }}">Вернуться на главную</a>
+    </p>
+</div>
+{% endblock %}   
