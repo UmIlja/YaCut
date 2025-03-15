@@ -2,11 +2,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Length, Optional, Regexp
 
-from .constants import (
-    LETTERS_AND_DIGITS_PATTERN,
-    MAX_USER_SHORT_ID_LENGTH,
-    MIN_USER_SHORT_ID_LENGTH
-)
+from .constants import (LETTERS_AND_DIGITS_PATTERN, MAX_USER_SHORT_ID_LENGTH,
+                        MIN_USER_SHORT_ID_LENGTH)
 
 
 class URLForm(FlaskForm):

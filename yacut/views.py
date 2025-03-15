@@ -22,8 +22,6 @@ def index_view():
         db.session.commit()
         # Формируем созданную ссылку
         created_link = f"{request.host_url}{url.short}"
-    else:
-        print("Ошибки формы:", form.errors)  # Вывод ошибок формы
     return render_template('index.html', form=form, created_link=created_link)
 
 

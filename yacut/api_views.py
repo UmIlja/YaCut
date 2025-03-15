@@ -1,7 +1,6 @@
 from flask import jsonify, request
 
-from . import app, db
-from .constants import LETTERS_AND_DIGITS, MAX_USER_SHORT_ID_LENGTH
+from . import app
 from .error_handlers import TheAPIError
 from .models import URLMap
 
@@ -12,31 +11,23 @@ def create_url_id():
         data = request.get_json()
     except Exception:
         raise TheAPIError("Отсутствует тело запроса")
-    if 'url' not in data:
-        raise TheAPIError('"url" является обязательным полем!')
-    if 'custom_id' in data:
-        custom_id = data['custom_id']
-        if len(custom_id) > MAX_USER_SHORT_ID_LENGTH:
-            raise TheAPIError(
-                'Указано недопустимое имя для короткой ссылки')
-        for symbol in custom_id:
-            if symbol not in LETTERS_AND_DIGITS:
-                raise TheAPIError(
-                    'Указано недопустимое имя для короткой ссылки')
-        if URLMap.query.filter_by(short=custom_id).first() is not None:
-            raise TheAPIError(
-                'Предложенный вариант короткой ссылки уже существует.')
 
-    url = URLMap()  # Создаем объект без параметров
-    url.from_dict(data)  # Заполняем поля из запроса
-    db.session.add(url)  # Добавляем объект в сессию
-    db.session.commit()
+    # Получаем оригинальный URL и custom_id из данных
+    original = data.get('url')  # Получаем original_url, если он есть
+    custom_id = data.get('custom_id')  # Получаем custom_id, если он есть
+
+    # Создаем объект URLMap с оригинальным URL и, если есть, с custom_id
+    url = URLMap(original=original, short=custom_id)
+
+    # Сохраняем объект, валидируя его
+    url.save(custom_id=custom_id, url=original)
+
     return jsonify(url.to_dict()), 201
 
 
 @app.route('/api/id/<string:short_id>/', methods=['GET'])
 def get_original_url(short_id):
-    url = URLMap.query.filter_by(short=short_id).first()
+    url = URLMap.get(short_id)
     if url is None:
         raise TheAPIError('Указанный id не найден', 404)
     return jsonify({'url': url.original}), 200
