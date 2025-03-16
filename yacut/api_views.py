@@ -1,7 +1,7 @@
 from flask import jsonify, request
 
 from . import app
-from .error_handlers import TheAPIError
+from .error_handlers import MissingDataError, NotFoundError
 from .models import URLMap
 
 
@@ -10,17 +10,14 @@ def create_url_id():
     try:
         data = request.get_json()
     except Exception:
-        raise TheAPIError("Отсутствует тело запроса")
+        raise MissingDataError("Отсутствует тело запроса")
+    if 'url' not in data:
+        raise MissingDataError('"url" является обязательным полем!')
 
-    # Получаем оригинальный URL и custom_id из данных
-    original = data.get('url')  # Получаем original_url, если он есть
-    custom_id = data.get('custom_id')  # Получаем custom_id, если он есть
+    # Создаем объект URLMap из данных с помощью метода from_dict
+    url = URLMap.from_dict(data)
 
-    # Создаем объект URLMap с оригинальным URL и, если есть, с custom_id
-    url = URLMap(original=original, short=custom_id)
-
-    # Сохраняем объект, валидируя его
-    url.save(custom_id=custom_id, url=original)
+    url.save()  # Сохраняем объект, валидируя его
 
     return jsonify(url.to_dict()), 201
 
@@ -29,5 +26,5 @@ def create_url_id():
 def get_original_url(short_id):
     url = URLMap.get(short_id)
     if url is None:
-        raise TheAPIError('Указанный id не найден', 404)
+        raise NotFoundError('Указанный id не найден')
     return jsonify({'url': url.original}), 200

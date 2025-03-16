@@ -3,12 +3,11 @@ from datetime import datetime, timezone
 from random import choices
 
 from flask import current_app
-
 from yacut import db
 
 from .constants import (DEFAULT_SHORT_ID_LENGTH, LETTERS_AND_DIGITS,
                         LETTERS_AND_DIGITS_PATTERN, MAX_USER_SHORT_ID_LENGTH)
-from .error_handlers import TheAPIError
+from .error_handlers import TheFieldError
 
 
 class URLMap(db.Model):
@@ -21,10 +20,7 @@ class URLMap(db.Model):
 
     def __init__(self, original, short=None):
         self.original = original
-        if short:
-            self.short = short  # Используем переданный short
-        else:
-            self.short = self.get_unique_short_id()
+        self.short = short  # Устанавливаем short, если он передан, иначе None
 
     @classmethod
     def get_unique_short_id(cls):
@@ -33,12 +29,12 @@ class URLMap(db.Model):
         Формат для ссылки по умолчанию — шесть случайных символов,
         используя: заглавные/прописные латинские буквы, все цифры.
         """
-        while True:
-            short_id = "".join(choices(LETTERS_AND_DIGITS,
-                                       k=DEFAULT_SHORT_ID_LENGTH))
-            # Проверяем, существует ли уже сгенерированный short_id в БД
-            if not cls.query.filter_by(short=short_id).first():
-                return short_id
+        short_id = "".join(choices(LETTERS_AND_DIGITS,
+                                   k=DEFAULT_SHORT_ID_LENGTH))
+        # Проверяем, существует ли уже сгенерированный short_id в БД
+        if cls.query.filter_by(short=short_id).first() is not None:
+            raise TheFieldError('Возможные варианты короткого id исчерпаны.')
+        return short_id
 
     def to_dict(self):
         return dict(
@@ -63,20 +59,19 @@ class URLMap(db.Model):
         """Получить оригинальный URL по короткому идентификатору."""
         return cls.query.filter_by(short=short_id).first()
 
-    def save(self, custom_id=None, url=None):
+    def save(self):
         """Сохранить объект в базе данных с валидацией атрибутов."""
-        if url is None:
-            raise TheAPIError('"url" является обязательным полем!')
-        # Если custom_id передан и не пустой, выполняем его валидацию
-        if custom_id is not None and custom_id != '':
-            if not re.fullmatch(LETTERS_AND_DIGITS_PATTERN, custom_id):
-                raise TheAPIError(
+        # Если short не установлен, генерируем уникальный short_id
+        if self.short is None:
+            self.short = self.get_unique_short_id()
+        # Если short уже установлен, выполняем его валидацию
+        if self.short is not None and self.short != '':
+            if not re.fullmatch(LETTERS_AND_DIGITS_PATTERN, self.short):
+                raise TheFieldError(
                     'Указано недопустимое имя для короткой ссылки')
-            if URLMap.query.filter_by(short=custom_id).first() is not None:
-                raise TheAPIError(
+            if URLMap.query.filter_by(short=self.short).first() is not None:
+                raise TheFieldError(
                     'Предложенный вариант короткой ссылки уже существует.')
-            self.short = custom_id
-            self.original = url
 
         db.session.add(self)
         db.session.commit()
