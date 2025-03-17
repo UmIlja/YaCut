@@ -69,7 +69,7 @@ class URLMap(db.Model):
             if not re.fullmatch(LETTERS_AND_DIGITS_PATTERN, self.short):
                 raise TheFieldError(
                     'Указано недопустимое имя для короткой ссылки')
-            if URLMap.query.filter_by(short=self.short).first() is not None:
+            if URLMap.get(self.short) is not None:
                 flash('Предложенный вариант короткой ссылки уже существует.')
                 raise TheFieldError(
                     'Предложенный вариант короткой ссылки уже существует.')
