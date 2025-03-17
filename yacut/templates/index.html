@@ -39,9 +39,11 @@
           <p class="py-3 mb-3">
             {% with messages = get_flashed_messages() %}
               {% if messages %}
-                {% for message in messages %}
-                  {{ message }}
-                {% endfor %}
+                <ul class="flashes">
+                  {% for message in messages %}
+                    <li class="text-danger">{{ message }}</li>
+                  {% endfor %}
+                </ul>
               {% endif %}
             {% endwith %}
           </p>

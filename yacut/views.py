@@ -10,18 +10,16 @@ def index_view():
     form = URLForm()
     created_link = None
     if form.validate_on_submit():
-        short = form.custom_id.data
-        if URLMap.get(short) is not None:
-            flash('Предложенный вариант короткой ссылки уже существует.')
+        url = URLMap(original=form.original_link.data,
+                     short=form.custom_id.data)
+
+        try:
+            url.save()
+            created_link = f"{request.host_url}{url.short}"
+        except Exception as e:  # Если что-то не так и метод save не обработал
+            flash(str(e))
             return render_template('index.html', form=form)
-        url = URLMap(
-            original=form.original_link.data,
-            short=short)
 
-        url.save()  # Сохраняем объект, валидируя его
-
-        # Формируем созданную ссылку
-        created_link = f"{request.host_url}{url.short}"
     return render_template('index.html', form=form, created_link=created_link)
 
 

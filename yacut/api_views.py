@@ -16,7 +16,6 @@ def create_url_id():
 
     # Создаем объект URLMap из данных с помощью метода from_dict
     url = URLMap.from_dict(data)
-
     url.save()  # Сохраняем объект, валидируя его
 
     return jsonify(url.to_dict()), 201

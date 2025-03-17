@@ -2,7 +2,7 @@ import re
 from datetime import datetime, timezone
 from random import choices
 
-from flask import current_app
+from flask import current_app, flash
 from yacut import db
 
 from .constants import (DEFAULT_SHORT_ID_LENGTH, LETTERS_AND_DIGITS,
@@ -32,7 +32,7 @@ class URLMap(db.Model):
         short_id = "".join(choices(LETTERS_AND_DIGITS,
                                    k=DEFAULT_SHORT_ID_LENGTH))
         # Проверяем, существует ли уже сгенерированный short_id в БД
-        if cls.query.filter_by(short=short_id).first() is not None:
+        if cls.get(cls.short) is not None:
             raise TheFieldError('Возможные варианты короткого id исчерпаны.')
         return short_id
 
@@ -64,12 +64,13 @@ class URLMap(db.Model):
         # Если short не установлен, генерируем уникальный short_id
         if self.short is None:
             self.short = self.get_unique_short_id()
-        # Если short уже установлен, выполняем его валидацию
+        # Если short уже был установлен, выполняем его валидацию...
         if self.short is not None and self.short != '':
             if not re.fullmatch(LETTERS_AND_DIGITS_PATTERN, self.short):
                 raise TheFieldError(
                     'Указано недопустимое имя для короткой ссылки')
             if URLMap.query.filter_by(short=self.short).first() is not None:
+                flash('Предложенный вариант короткой ссылки уже существует.')
                 raise TheFieldError(
                     'Предложенный вариант короткой ссылки уже существует.')
 
